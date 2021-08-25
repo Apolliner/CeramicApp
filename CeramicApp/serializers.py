@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from CeramicApp.models import AccessLevel, Organization, Language, Session, Note #, User
-from django.contrib.auth.models import User
+from CeramicApp.models import AccessLevel, Organization, Language, Session, Note, User
+
 
 class UserSerializer(serializers.ModelSerializer):
 
