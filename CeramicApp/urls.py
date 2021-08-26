@@ -6,6 +6,7 @@ from CeramicApp import views
 router = DefaultRouter()
 router.register(r'note', views.NoteViewSet)
 router.register(r'user', views.UserViewSet)
+router.register(r'organization', views.OrganizationViewSet)
 
 # The API URLs are now determined automatically by the router.
 urlpatterns = [

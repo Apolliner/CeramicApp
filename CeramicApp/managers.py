@@ -2,33 +2,51 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext_lazy as _
 
 
-class CustomUserManager(BaseUserManager):
-    """
-    Custom user model manager where phone_number is the unique identifiers
-    for authentication instead of usernames.
-    """
-    def create_user(self, phone_number, password, **extra_fields):
+class UserManager(BaseUserManager):
+
+    def create_user(self, name, phone_number, password=None,**kwargs):
         """
-        Create and save a User with the given phone_number and password.
+        Создание пользователя
         """
+        if not name:
+            raise ValueError('Users must have an name')
         if not phone_number:
-            raise ValueError(_('The phone number must be set'))
-        #phone_number = self.normalize_phone_number(phone_number)
-        user = self.model(phone_number=phone_number, **extra_fields)
+            raise ValueError('Users must have an phone_number')
+
+        user = self.model(name=name,
+            phone_number=phone_number,**kwargs)
+
         user.set_password(password)
-        user.save()
+        user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone_number, password, **extra_fields):
+    def create_manager(self, name, phone_number, password=None,**kwargs):
         """
-        Create and save a SuperUser with the given phone_number and password.
+        Создание менеджера
         """
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
+        if not name:
+            raise ValueError('Users must have an name')
+        if not phone_number:
+            raise ValueError('Users must have an phone_number')
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError(_('Superuser must have is_staff=True.'))
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError(_('Superuser must have is_superuser=True.'))
-        return self.create_user(phone_number, password, **extra_fields)
+        user = self.model(name=name,
+            phone_number=phone_number,**kwargs)
+
+        user.set_password(password)
+        user.level = AccessLevel.manager
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, name, phone_number, password):
+        """
+        Создание администратора
+        """
+        user = self.create_user(
+            name,
+            phone_number,
+            password=password
+        )
+        user.is_superuser = True
+        user.level = AccessLevel.admin
+        user.save(using=self._db)
+        return user

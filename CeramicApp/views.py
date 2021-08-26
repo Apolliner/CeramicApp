@@ -10,17 +10,13 @@ from rest_framework.response import Response
 class NoteViewSet(viewsets.ModelViewSet):
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
-    #permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
     def highlight(self, request, *args, **kwargs):
         note = self.get_object()
         return Response(note.highlighted)
 
-    #def perform_create(self, serializer):
-    #    serializer.save(self)#owner=self.request.user)
     def perform_create(self, serializer):
-        #serializer.validated_data['autor'] = self.request.user
         return super(NoteViewSet, self).perform_create(serializer)
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -35,8 +31,17 @@ class UserViewSet(viewsets.ModelViewSet):
         note = self.get_object()
         return Response(note.highlighted)
 
-    #def perform_create(self, serializer):
-    #    serializer.save(self)#owner=self.request.user)
     def perform_create(self, serializer):
-        #serializer.validated_data['autor'] = self.request.user
         return super(UserViewSet, self).perform_create(serializer)
+
+class OrganizationViewSet(viewsets.ModelViewSet):
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
+
+    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    def highlight(self, request, *args, **kwargs):
+        note = self.get_object()
+        return Response(note.highlighted)
+
+    def perform_create(self, serializer):
+        return super(OrganizationViewSet, self).perform_create(serializer)
