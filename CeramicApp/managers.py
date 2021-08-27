@@ -1,6 +1,12 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext_lazy as _
+#from CeramicApp.models import AccessLevel
+from django.db import models
 
+class AccessLevel(models.TextChoices):
+	user			= "User"
+	manager			= "Manager"
+	admin			= "Admin"
 
 class UserManager(BaseUserManager):
 
@@ -15,7 +21,6 @@ class UserManager(BaseUserManager):
 
         user = self.model(name=name,
             phone_number=phone_number,**kwargs)
-
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -28,7 +33,6 @@ class UserManager(BaseUserManager):
             raise ValueError('Users must have an name')
         if not phone_number:
             raise ValueError('Users must have an phone_number')
-
         user = self.model(name=name,
             phone_number=phone_number,**kwargs)
 

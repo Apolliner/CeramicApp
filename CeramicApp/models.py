@@ -1,10 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.base_user import BaseUserManager
+#from django.contrib.auth.models import AbstractUser
+#from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from CeramicApp.managers import UserManager
 import datetime
+from datetime import timedelta
+import jwt
+from django.conf import settings
 
 class AccessLevel(models.TextChoices):
 	user			= "User"
@@ -44,6 +47,31 @@ class User(AbstractBaseUser,PermissionsMixin):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
+    @property
+    def token(self):
+        """
+        Позволяет нам получить токен пользователя, вызвав `user.token` вместо
+        `user.generate_jwt_token().
+
+        Декоратор `@property` выше делает это возможным.
+        `token` называется «динамическим свойством ».
+        """
+        return self._generate_jwt_token()
+    def _generate_jwt_token(self):
+        """
+        Создает веб-токен JSON, в котором хранится идентификатор
+        этого пользователя и срок его действия
+        составляет 60 дней в будущем.
+        """
+        dt = datetime.datetime.now() + timedelta(days=60)
+
+        token = jwt.encode({
+            'id': self.pk,
+            'exp': 555 #int(dt.strftime('%s'))
+        }, settings.SECRET_KEY, algorithm='HS256')
+
+        return token #.decode('utf-8')
+
 class Language(models.Model):
 	short_name		= models.TextField("Короткое название",choices=LanguageChoice.choices, max_length=2, blank=False, null=False)
 
@@ -56,3 +84,4 @@ class Note(models.Model):
 	header			= models.TextField("Заголовок", max_length=100, blank=False, null=False)
 	text			= models.TextField("Текст заметки", max_length=2000, blank=False, null=False)
 	startdate		= models.DateTimeField("Дата публикации", blank=False, null=False, default=datetime.datetime.now)
+
