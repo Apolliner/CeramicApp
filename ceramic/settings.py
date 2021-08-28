@@ -94,11 +94,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
-
-
 
 LANGUAGE_CODE = 'en-us'
 
@@ -116,13 +113,6 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, 'CeramicApp.static')
 STATIC_URL = '/static/'
 
-#REST_FRAMEWORK = {
-#    'DEFAULT_AUTHENTICATION_CLASSES': [
-#        'rest_framework.authentication.BasicAuthentication',
-#        'rest_framework.authentication.SessionAuthentication',
-#    ]
-#}
-
 AUTH_USER_MODEL = 'CeramicApp.User'
 
 REST_FRAMEWORK = { 
@@ -134,15 +124,6 @@ REST_FRAMEWORK = {
      'rest_framework_jwt.authentication.JSONWebTokenAuthentication', 
      ) 
 }
-
-#REST_FRAMEWORK = {
-#    'DEFAULT_PERMISSION_CLASSES': (
-#        'rest_framework.permissions.IsAuthenticated',
-#        ),
-#    'DEFAULT_AUTHENTICATION_CLASSES': (
-#        'CeramicApp.authentication.JWTAuthentication',
-#        )
-#}
 
 LANGUAGES = (
     ('ru', 'Russian'),

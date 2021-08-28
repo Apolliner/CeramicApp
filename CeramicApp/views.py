@@ -10,7 +10,45 @@ from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from CeramicApp.serializers import UserRegistrationSerializer, UserLoginSerializer
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework_jwt.settings import api_settings
 
+JWT_DECODE_HANDLER = api_settings.JWT_DECODE_HANDLER
+
+
+class UserProfileView(RetrieveAPIView):
+
+    permission_classes = (IsAuthenticated,)
+    authentication_class = JSONWebTokenAuthentication
+
+    def get(self, request):
+        language = JWT_DECODE_HANDLER(request.headers['Authorization'][7:])['language']
+        try:
+            user_profile = User.objects.get(phone_number=request.user.phone_number)
+            status_code = status.HTTP_200_OK
+            response = {
+                'success': 'true',
+                'status code': status_code,
+                'message': 'User profile fetched successfully',
+                'data': [{
+                    'name': user_profile.name,
+                    'phone_number': user_profile.phone_number,
+                    'level': user_profile.level,
+                    'organization': user_profile.organization,
+                    'language': language,
+                    }]
+                }
+
+        except Exception as e:
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status code': status.HTTP_400_BAD_REQUEST,
+                'message': 'User does not exists',
+                'error': str(e)
+                }
+        return Response(response, status=status_code)
 
 class UserLoginView(APIView):
 
@@ -35,22 +73,6 @@ class UserLoginView(APIView):
         """ Фиктивный метод для прохождения проверки роутером """
         return []
 
-#class LoginAPIView(APIView):
-
-#    permission_classes = [AllowAny]
-#    serializer_class = LoginSerializer
-
-#    def post(self, request):
-
-#        serializer = self.serializer_class(data=request.data)
-#        serializer.is_valid(raise_exception=True)
-
-#        return Response(serializer.data, status=status.HTTP_200_OK)
-#    @classmethod
-#    def get_extra_actions(cls):
-#        """ Фиктивный метод для прохождения проверки роутером """
-#        return []
-
 class UserRegistrationView(CreateAPIView):
 
     serializer_class = UserRegistrationSerializer
@@ -73,64 +95,9 @@ class UserRegistrationView(CreateAPIView):
         """ Фиктивный метод для прохождения проверки роутером """
         return []
 
-#class RegistrationAPIView(APIView):
-#    """
-#    Registers a new user.
-#    """
-#    permission_classes = [IsOwnerOrReadOnly]#[AllowAny]
-#    serializer_class = RegistrationSerializer
-
-#    def post(self, request):
-#        """
-#        Creates a new User object.
-#        Username, phone_number, and password are required.
-#        Returns a JSON web token.
-#        """
-#        serializer = self.serializer_class(data=request.data)
-#        serializer.is_valid(raise_exception=True)
-#        serializer.save()
-
-#        return Response(
-#            {
-#                'token': serializer.data.get('token', None),
-#            },
-#            status=status.HTTP_201_CREATED,
-#        )
-#    @classmethod
-#    def get_extra_actions(cls):
-#        """ Фиктивный метод для прохождения проверки роутером """
-#        return []
-
-#class LoginAPIView(APIView):
-#    """
-#    Logs in an existing user.
-#    """
-#    permission_classes = [AllowAny]
-    #permission_classes = (IsAuthenticated,) 
-    #authentication_classes = (TokenAuthentication,)
-    #permission_classes = [IsOwnerOrReadOnly]#[AllowAny]
-#    serializer_class = LoginSerializer
-
-#    def post(self, request):
-#        """
-#        Checks is user exists.
-#        phone_number and password are required.
-#        Returns a JSON web token.
-#        """
-#        serializer = self.serializer_class(data=request.data)
-#        serializer.is_valid(raise_exception=True)
-
-#        return Response(serializer.data, status=status.HTTP_200_OK)
-#    @classmethod
-#    def get_extra_actions(cls):
-#        """ Фиктивный метод для прохождения проверки роутером """
-#        return []
-
-
 class NoteViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,) 
     authentication_classes = (TokenAuthentication,)
-    #permission_classes = [IsOwnerOrReadOnly]
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
 
@@ -148,7 +115,6 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     permission_classes = (IsAuthenticated,) 
     authentication_classes = (TokenAuthentication,)
-    #permission_classes = [IsOwnerOrReadOnly]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 

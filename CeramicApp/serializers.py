@@ -15,13 +15,13 @@ class UserLoginSerializer(serializers.Serializer):
 
     phone_number = serializers.CharField(max_length=11)
     password = serializers.CharField(max_length=128, write_only=True)
-    #language = serializers.CharField(max_length=2)
+    language = serializers.CharField(max_length=2, write_only=True)
     token = serializers.CharField(max_length=255, read_only=True)
 
     def validate(self, data):
-        phone_number = data.get("phone number", None)
+        phone_number = data.get("phone_number", None)
         password = data.get("password", None)
-        #language = data.get("language", 'en')
+        language = data.get("language", None)
         user = authenticate(phone_number=phone_number, password=password)
         
         if user is None:
@@ -30,6 +30,7 @@ class UserLoginSerializer(serializers.Serializer):
             )
         try:
             payload = JWT_PAYLOAD_HANDLER(user)
+            payload['language'] = language
             jwt_token = JWT_ENCODE_HANDLER(payload)
             update_last_login(None, user)
         except User.DoesNotExist:
@@ -57,13 +58,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
-    #def create(self, validated_data):
-    #    """
-    #    Create and return a new `User` instance, given the validated data.
-    #    """
-    #    validated_data['password'] = make_password(validated_data['password'])
-    #    return User.objects.create(**validated_data)
-
 
 class OrganizationSerializer(serializers.ModelSerializer):
 
