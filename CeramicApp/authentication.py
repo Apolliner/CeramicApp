@@ -82,11 +82,11 @@ class JWTAuthentication(authentication.BaseAuthentication):
         """
         Try to authenticate the given credentials. If authentication is
         successful, return the user and token. If not, throw an error.
-        """;
+        """
         try:
             payload = jwt.decode(token, settings.SECRET_KEY)
         except:
-            payload = jwt.decode(token, settings.SECRET_KEY)
+
             msg = 'Invalid authentication. Could not decode token.'
             raise exceptions.AuthenticationFailed(msg)
 

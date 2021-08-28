@@ -4,77 +4,52 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login
 import jwt
 from django.conf import settings
+from django.contrib.auth.models import update_last_login
+from rest_framework_jwt.settings import api_settings
 
-class RegistrationSerializer(serializers.ModelSerializer):
-    """
-    Creates a new user.
-    phone_number, name, and password are required.
-    Returns a JSON web token.
-    """
 
-    # The password must be validated and should not be read by the client
-    password = serializers.CharField(
-        max_length=128,
-        min_length=8,
-        write_only=True,
-    )
+JWT_PAYLOAD_HANDLER = api_settings.JWT_PAYLOAD_HANDLER
+JWT_ENCODE_HANDLER = api_settings.JWT_ENCODE_HANDLER
 
-    # The client should not be able to send a token along with a registration
-    # request. Making `token` read-only handles that for us.
-    token = serializers.CharField(max_length=255, read_only=True)
+class UserLoginSerializer(serializers.Serializer):
 
-    class Meta:
-        model = User
-        fields = ('phone_number', 'name', 'password', 'token',)
-
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
-
-class LoginSerializer(serializers.Serializer):
-    """
-    Authenticates an existing user.
-    phone_number and password are required.
-    Returns a JSON web token.
-    """
-    phone_number = serializers.CharField(max_length=11, write_only=True)
+    phone_number = serializers.CharField(max_length=11)
     password = serializers.CharField(max_length=128, write_only=True)
-
-    # Ignore these fields if they are included in the request.
-    name = serializers.CharField(max_length=255, read_only=True)
+    #language = serializers.CharField(max_length=2)
     token = serializers.CharField(max_length=255, read_only=True)
 
     def validate(self, data):
-        """
-        Validates user data.
-        """
-        phone_number = data.get('phone_number', None)
-        password = data.get('password', None)
-
-        if phone_number is None:
-            raise serializers.ValidationError(
-                'An phone_number is required to log in.'
-            )
-
-        if password is None:
-            raise serializers.ValidationError(
-                'A password is required to log in.'
-            )
-
-        user = authenticate(username=phone_number, password=password)
-
+        phone_number = data.get("phone number", None)
+        password = data.get("password", None)
+        #language = data.get("language", 'en')
+        user = authenticate(phone_number=phone_number, password=password)
+        
         if user is None:
             raise serializers.ValidationError(
-                'A user with this phone_number and password was not found.'
+                'A user with this phone number and password is not found.'
             )
-
-        if not user.is_active:
+        try:
+            payload = JWT_PAYLOAD_HANDLER(user)
+            jwt_token = JWT_ENCODE_HANDLER(payload)
+            update_last_login(None, user)
+        except User.DoesNotExist:
             raise serializers.ValidationError(
-                'This user has been deactivated.'
+                'User with given email and password does not exists'
             )
-
         return {
-            'token': user.token.decode('utf-8'),
+            'phone_number':user.phone_number,
+            'token': jwt_token
         }
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('name', 'phone_number', 'password', 'level', 'organization')
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)
 
 
 class UserSerializer(serializers.ModelSerializer):
