@@ -16,9 +16,20 @@ from rest_framework_jwt.settings import api_settings
 
 JWT_DECODE_HANDLER = api_settings.JWT_DECODE_HANDLER
 
+class Fictive_get_extra_actions:
+    """ 
+        Router требует наличия метода get_extra_actions. Наследование от этого класса решает эту проблему 
+    """
+    @classmethod
+    def get_extra_actions(cls):
+        """ Фиктивный метод для прохождения проверки роутером """
+        return []
+
 
 class UserProfileView(RetrieveAPIView):
-
+    """ 
+        Просмотр пользователем своего профиля 
+    """
     permission_classes = (IsAuthenticated,)
     authentication_class = JSONWebTokenAuthentication
 
@@ -50,8 +61,11 @@ class UserProfileView(RetrieveAPIView):
                 }
         return Response(response, status=status_code)
 
-class UserLoginView(APIView):
 
+class UserLoginView(APIView, Fictive_get_extra_actions):
+    """ 
+        Аутентификация пользователя, возвращающая токен 
+    """
     queryset = ''
     permission_classes = (AllowAny,)
     serializer_class = UserLoginSerializer
@@ -68,13 +82,10 @@ class UserLoginView(APIView):
         status_code = status.HTTP_200_OK
 
         return Response(response, status=status_code)
-    @classmethod
-    def get_extra_actions(cls):
-        """ Фиктивный метод для прохождения проверки роутером """
-        return []
+
 
 class UserRegistrationView(CreateAPIView):
-
+    """ Регистрация пользователя """
     serializer_class = UserRegistrationSerializer
     permission_classes = (AllowAny,)
 
@@ -90,31 +101,96 @@ class UserRegistrationView(CreateAPIView):
             }
         
         return Response(response, status=status_code)
-    @classmethod
-    def get_extra_actions(cls):
-        """ Фиктивный метод для прохождения проверки роутером """
-        return []
+
 
 class NoteViewSet(viewsets.ModelViewSet):
+    """ 
+        Обработка обращений к модели Note 
+    """
     permission_classes = (IsAuthenticated,) 
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = [JSONWebTokenAuthentication]
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
 
-    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
-    def highlight(self, request, *args, **kwargs):
-        note = self.get_object()
-        return Response(note.highlighted)
+    def get_use_serializer(self, language, text=False):
+        """ 
+            Возвращает сериализатор с отображением полей на языке language 
+        """
+        class AssembledNoteSerializer(self.serializer_class):
+            class Meta:
+                model = Note
+                read_only_fields = ['id', 'autor', 'startdate']
+                extra_kwargs = {
+                                'header': {'source': 'header_en'},
+                                'text': {'source': 'text_en'}
+                                }
+        serializer = AssembledNoteSerializer
+        serializer.Meta.fields = ['id', 'autor', 'startdate']
+        serializer.Meta.fields.append('header_' + str(language))
+        if text:
+            serializer.Meta.fields.append('text_' + str(language))
+        return serializer
 
-    def perform_create(self, serializer):
-        return super(NoteViewSet, self).perform_create(serializer)
+    def list(self, request):
+        """ 
+            Отображение множества записей 
+        """
+        language = JWT_DECODE_HANDLER(request.headers['Authorization'][7:])['language']
+        if request.user.level == 'User':
+            use_serializer = self.get_use_serializer(language)
+            notes = Note.objects.filter(autor=request.user.id)
+        elif request.user.level == 'Manager':
+            use_serializer = self.get_use_serializer(language)
+            organization_members = Note.objects.filter(organization=request.user.organization)
+            organization_id = []
+            for member in organization_members:
+                organization_id.append(member.id)
+            notes = Note.objects.filter(autor__in=request.organization_id)
+        elif request.user.level == 'Admin':
+            use_serializer = self.serializer_class
+            notes = Note.objects.all()
+        else:
+            response = {
+                    'success': 'false',
+                    'status code': status.HTTP_400_BAD_REQUEST,
+                    'message': 'Note does not exists',
+                    }
+            return Response(response, status.HTTP_400_BAD_REQUEST)
+        #Если всё прошло успешно
+        serializer = use_serializer(instance=notes, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        """ 
+            Отображение одной записи 
+        """
+        if request.user.level == 'Admin':
+            #Отображение всех полей для администратора
+            use_serializer = self.serializer_class
+        else:
+            language = JWT_DECODE_HANDLER(request.headers['Authorization'][7:])['language']
+            use_serializer = self.get_use_serializer(language, text=True)
+        try:
+            notes = Note.objects.filter(id=pk)
+            serializer = use_serializer(instance=notes, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            status_code = status.HTTP_400_BAD_REQUEST
+            response = {
+                'success': 'false',
+                'status code': status.HTTP_400_BAD_REQUEST,
+                'message': f'Note {pk} does not exists',
+                'error': str(e)
+                }
+        return Response(response, status=status_code)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """
     This viewset automatically provides `list` and `retrieve` actions.
     """
     permission_classes = (IsAuthenticated,) 
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = [JSONWebTokenAuthentication]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -126,7 +202,10 @@ class UserViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         return super(UserViewSet, self).perform_create(serializer)
 
+
 class OrganizationViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,) 
+    authentication_classes = [JSONWebTokenAuthentication]
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 

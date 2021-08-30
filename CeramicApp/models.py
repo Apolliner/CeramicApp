@@ -57,7 +57,3 @@ class Note(models.Model):
 	header			= models.TextField("Заголовок", max_length=100, blank=False, null=False)
 	text			= models.TextField("Текст заметки", max_length=2000, blank=False, null=False)
 	startdate		= models.DateTimeField("Дата публикации", blank=False, null=False, default=datetime.datetime.now)
-
-
-Language.objects.create(short_name=LanguageChoice.en)
-Language.objects.create(short_name=LanguageChoice.ru)

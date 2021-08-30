@@ -52,7 +52,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
 
-
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -78,13 +77,12 @@ class SessionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class NoteSerializer(serializers.ModelSerializer):
-    #owner = serializers.ReadOnlyField(source='owner.username')
+    autor = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = Note
-        #fields = ['autor', 'header', 'text', 'startdate']
-        fields = '__all__'
-    def create(self, validated_data):
-        """
-        Create and return a new `Note` instance, given the validated data.
-        """
-        return Note.objects.create(**validated_data)
+        exclude = ['header', 'text']
+        read_only_fields = ['id', 'autor', 'startdate']
+        extra_kwargs = {
+                        'header': {'source': 'header_en'},
+                        'text': {'source': 'text_en'}
+                        }
