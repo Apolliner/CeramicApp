@@ -1,6 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext_lazy as _
-#from CeramicApp.models import AccessLevel
 from django.db import models
 
 class AccessLevel(models.TextChoices):
@@ -50,7 +49,7 @@ class UserManager(BaseUserManager):
             phone_number,
             password=password
         )
-        user.is_superuser = True
+        user.is_superuser = False
         user.level = AccessLevel.admin
         user.save(using=self._db)
         return user

@@ -1,7 +1,7 @@
 from rest_framework import renderers, viewsets, permissions, generics, status
 from CeramicApp.models import AccessLevel, User, Organization, Language, Session, Note
 from CeramicApp.serializers import UserSerializer, OrganizationSerializer, LanguageSerializer, SessionSerializer, NoteSerializer
-from CeramicApp.permissions import IsOwnerOrReadOnly
+from CeramicApp.permissions import IsOwnerOrReadOnly, NotePermission, OrganizationPermission, UserPermission
 from rest_framework.decorators import api_view, action
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
@@ -76,7 +76,7 @@ class UserLoginView(APIView, Fictive_get_extra_actions):
         response = {
             'success' : 'True',
             'status code' : status.HTTP_200_OK,
-            'message': 'User logged in  successfully',
+            'message': 'User logged in successfully',
             'token' : serializer.data['token'],
             }
         status_code = status.HTTP_200_OK
@@ -102,12 +102,11 @@ class UserRegistrationView(CreateAPIView):
         
         return Response(response, status=status_code)
 
-
 class NoteViewSet(viewsets.ModelViewSet):
     """ 
         Обработка обращений к модели Note 
     """
-    permission_classes = (IsAuthenticated,) 
+    permission_classes = [NotePermission]
     authentication_classes = [JSONWebTokenAuthentication]
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
@@ -173,6 +172,7 @@ class NoteViewSet(viewsets.ModelViewSet):
         try:
             notes = Note.objects.filter(id=pk)
             serializer = use_serializer(instance=notes, many=True)
+            self.check_object_permissions(request, notes[0])
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             status_code = status.HTTP_400_BAD_REQUEST
@@ -187,24 +187,20 @@ class NoteViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-    This viewset automatically provides `list` and `retrieve` actions.
+    Отображение списка пользователей для администратора.
+    Администратор может видеть все данные всех пользователей и изменять их.
     """
-    permission_classes = (IsAuthenticated,) 
+    permission_classes = (UserPermission,) 
     authentication_classes = [JSONWebTokenAuthentication]
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
-    def highlight(self, request, *args, **kwargs):
-        note = self.get_object()
-        return Response(note.highlighted)
 
     def perform_create(self, serializer):
         return super(UserViewSet, self).perform_create(serializer)
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,) 
+    permission_classes = (OrganizationPermission,) 
     authentication_classes = [JSONWebTokenAuthentication]
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer

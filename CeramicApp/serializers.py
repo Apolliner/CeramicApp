@@ -53,10 +53,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return User.objects.create_user(**validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
-
+    """ Сериализатор общедоступной информации о пользователях """
     class Meta:
         model = User
-        fields = '__all__'
+        exclude = ("is_superuser", "groups", "user_permissions")
+
+class ProfileSerializer(serializers.ModelSerializer):
+    """ Сериализатор личного профиля пользователя """
+    class Meta:
+        model = User
+        exclude = ("is_superuser", "groups", "user_permissions")
 
 class OrganizationSerializer(serializers.ModelSerializer):
 
