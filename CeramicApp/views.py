@@ -198,6 +198,16 @@ class UserViewSet(viewsets.ModelViewSet, AddCustomResponce):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def list(self, request):
+        """ Отображение множества записей """
+        try:
+            users = User.objects.all()
+            serializer = self.serializer_class(instance=users, many=True)
+            return self.custom_response(True, status.HTTP_200_OK, 'Organizations fetched successfully', data=serializer.data)
+        except Exception:
+            error = Exception
+        return self.custom_response(False, status.HTTP_400_BAD_REQUEST, f'Organizations does not exists', error=str(error))
+
     def retrieve(self, request, pk=None):
         """ 
             Отображение одной записи 
