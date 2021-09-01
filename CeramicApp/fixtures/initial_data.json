@@ -1,0 +1,16 @@
+[
+    {
+        "model": "CeramicApp.Language",
+        "pk": 1,
+        "fields": {
+            "short_name": "en"
+        }
+    },
+    {
+        "model": "CeramicApp.Language",
+        "pk": 2,
+        "fields": {
+            "short_name": "ru"
+        }
+    }
+]

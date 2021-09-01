@@ -56,11 +56,14 @@ class UserProfileView(APIView, AddCustomResponce):
         language = JWT_DECODE_HANDLER(request.headers['Authorization'][7:])['language']
         try:
             user_profile = User.objects.get(phone_number=request.user.phone_number)
+            organization = None
+            if user_profile.organization:
+                organization = user_profile.organization.id
             data = [{
                     'name': user_profile.name,
                     'phone_number': user_profile.phone_number,
                     'level': user_profile.level,
-                    'organization': user_profile.organization.id,
+                    'organization': organization,
                     'language': language,
                     }]
             return self.custom_response(True, status.HTTP_200_OK, 'User profile fetched successfully', data=data)
@@ -204,7 +207,7 @@ class UserViewSet(viewsets.ModelViewSet, AddCustomResponce):
             user = User.objects.filter(id=pk)
             serializer = use_serializer(instance=user, many=True)
             self.check_object_permissions(request, user[0])
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return self.custom_response(True, status.HTTP_200_OK, 'User fetched successfully', data=serializer.data[0])
         except Exception:
             error = Exception
         return self.custom_response(False, status.HTTP_400_BAD_REQUEST, f'Note {pk} does not exists', error=str(error))
@@ -240,11 +243,53 @@ class UserViewSet(viewsets.ModelViewSet, AddCustomResponce):
         return super(UserViewSet, self).perform_create(serializer)
 
 
-class OrganizationViewSet(viewsets.ModelViewSet):
+class OrganizationViewSet(viewsets.ModelViewSet, AddCustomResponce):
     permission_classes = (OrganizationPermission,) 
     authentication_classes = [JSONWebTokenAuthentication]
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+    def list(self, request):
+        """ Отображение множества записей """
+        try:
+            organization = Organization.objects.all()
+            serializer = self.serializer_class(instance=organization, many=True)
+            return self.custom_response(True, status.HTTP_200_OK, 'Organizations fetched successfully', data=serializer.data)
+        except Exception:
+            error = Exception
+        return self.custom_response(False, status.HTTP_400_BAD_REQUEST, f'Organizations does not exists', error=str(error))
+
+    def retrieve(self, request, pk=None):
+        """ Отображение одной записи """
+        use_serializer = self.serializer_class
+        try:
+            organization = Organization.objects.filter(id=pk)
+            serializer = use_serializer(instance=organization[0])
+            return self.custom_response(True, status.HTTP_200_OK, 'Organizations fetched successfully', data=serializer.data)
+        except Exception:
+            error = Exception
+        return self.custom_response(False, status.HTTP_400_BAD_REQUEST, f'Organizations does not exists', error=str(error))
+
+    def update(self, request, pk=None):
+        """ Отображение одной записи """
+        use_serializer = self.serializer_class
+        try:
+            organization = Organization.objects.filter(id=pk)[0]
+            serializer = use_serializer(data=request.data)
+            if serializer.is_valid():
+                organization.name = serializer.data.get("name")
+                organization.save()
+                return self.custom_response(True, status.HTTP_200_OK, 'Organizations update successfully')
+        except Exception:
+            error = Exception
+        return self.custom_response(False, status.HTTP_400_BAD_REQUEST, f'Organizations does not exists', error=str(error))
 
     def perform_create(self, serializer):
         return super(OrganizationViewSet, self).perform_create(serializer)
+
+class LanguageViewSet(viewsets.ModelViewSet, AddCustomResponce):
+    permission_classes = (OrganizationPermission,) 
+    authentication_classes = [JSONWebTokenAuthentication]
+    queryset = Language.objects.all()
+    serializer_class = LanguageSerializer
+    def perform_create(self, serializer):
+        return super(LanguageViewSet, self).perform_create(serializer)

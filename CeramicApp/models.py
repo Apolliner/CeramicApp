@@ -55,7 +55,7 @@ class Language(models.Model):
 
 class Session(models.Model):
 	user			= models.ForeignKey(User, on_delete=models.PROTECT)
-	language		= models.ForeignKey(Language, default="EN", on_delete=models.PROTECT)
+	language		= models.ForeignKey(Language, default="en", on_delete=models.PROTECT)
 
 
 class Note(models.Model):

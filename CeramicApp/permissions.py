@@ -25,16 +25,13 @@ class OrganizationPermission(permissions.BasePermission):
     """
         Разрешения доступа к модели Organization
 
-        Редактировать и создавать новые огранизации может только Admin
+        Видеть, редактировать и создавать новые огранизации может только Admin
     """
     def has_permission(self, request, view):
         """ 
             Первоначальная проверка доступа
         """
-        if request.user.level in ("User", "Manager"):
-            if request.method in permissions.SAFE_METHODS:
-                return True
-        elif request.user.level == "Admin":
+        if request.user.level == "Admin":
             return True
         return False
     def has_object_permission(self, request, view, obj):
