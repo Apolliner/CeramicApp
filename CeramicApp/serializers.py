@@ -50,7 +50,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('name', 'phone_number', 'password', 'level', 'organization')
+        fields = ('name', 'phone_number', 'password', 'organization')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
