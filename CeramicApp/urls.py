@@ -16,5 +16,4 @@ urlpatterns = [
     re_path(r'^registration/?$', views.UserRegistrationView.as_view(), name='user_registration'),
     re_path(r'^login/?$', views.UserLoginView.as_view(), name='user_login'),
     url(r'^profile', views.UserProfileView.as_view()),
-    #re_path(r'note', views.NoteViewSet.as_view(), name='note')
 ]

@@ -133,10 +133,6 @@ LANGUAGES = (
 MODELTRANSLATION_DEFAULT_LANGUAGE = 'ru'
 MODELTRANSLATION_TRANSLATION_REGISTRY = 'CeramicApp.translation'
 
-#JWT_AUTH = {
-#    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1)
-#}
-
 JWT_AUTH = {
   'JWT_ENCODE_HANDLER':
   'rest_framework_jwt.utils.jwt_encode_handler',

@@ -2,19 +2,21 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from CeramicApp.managers import UserManager
-import datetime
-from datetime import timedelta
-import jwt
 from django.conf import settings
+from datetime import timedelta
+import datetime
+
 
 class AccessLevel(models.TextChoices):
 	user			= "User"
 	manager			= "Manager"
 	admin			= "Admin"
 
+
 class LanguageChoice(models.TextChoices):
 	en = "en"
 	ru = "ru"
+
 
 class Organization(models.Model):
     name			= models.TextField("Название организации", max_length=100, blank=False, null=False)
@@ -25,6 +27,7 @@ class Organization(models.Model):
     class Meta:
         verbose_name = 'Организация'
         verbose_name_plural = 'Организации'
+
 
 class User(AbstractBaseUser,PermissionsMixin):
     name			= models.TextField("ФИО", max_length=100, blank=False, null=False)
@@ -45,12 +48,15 @@ class User(AbstractBaseUser,PermissionsMixin):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
+
 class Language(models.Model):
 	short_name		= models.TextField("Короткое название",choices=LanguageChoice.choices, max_length=2, blank=False, null=False)
+
 
 class Session(models.Model):
 	user			= models.ForeignKey(User, on_delete=models.PROTECT)
 	language		= models.ForeignKey(Language, default="EN", on_delete=models.PROTECT)
+
 
 class Note(models.Model):
 	autor			= models.ForeignKey(User, on_delete=models.PROTECT)

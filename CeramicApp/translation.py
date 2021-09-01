@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from modeltranslation.translator import translator, TranslationOptions
 from CeramicApp.models import Note
 
@@ -10,5 +8,6 @@ class NoteTranslationOptions(TranslationOptions):
     """
     
     fields = ('header', 'text',)
+
 
 translator.register(Note, NoteTranslationOptions)
