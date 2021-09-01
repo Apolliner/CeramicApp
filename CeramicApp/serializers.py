@@ -61,7 +61,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ("is_superuser", "groups", "user_permissions")
+        #extra_kwargs = {'password': {'write_only': True}}
         depth = 1
+
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)
 
 
 class ProfileSerializer(serializers.ModelSerializer):

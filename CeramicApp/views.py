@@ -108,9 +108,12 @@ class UserRegistrationView(CreateAPIView, AddCustomResponce):
 
     def create(self, request):
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return self.custom_response(True, status.HTTP_201_CREATED, 'User registered successfully')
+        if serializer.is_valid():
+            serializer.save()
+            return self.custom_response(True, status.HTTP_201_CREATED, 'User registered successfully')
+        return self.custom_response(False, status.HTTP_400_BAD_REQUEST, f'User registered unsuccessfully')
+
+        
 
 
 class NoteViewSet(viewsets.ModelViewSet, AddCustomResponce):
@@ -142,10 +145,12 @@ class NoteViewSet(viewsets.ModelViewSet, AddCustomResponce):
         return serializer
 
     def create(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return self.custom_response(True, status.HTTP_201_CREATED, 'Note created successfully')
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return self.custom_response(True, status.HTTP_201_CREATED, 'Note created successfully')
+        return self.custom_response(False, status.HTTP_400_BAD_REQUEST, f'Note created unsuccessfully')
+        
 
     def list(self, request):
         """ 
