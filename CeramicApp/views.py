@@ -106,7 +106,7 @@ class UserRegistrationView(CreateAPIView, AddCustomResponce):
     serializer_class = UserRegistrationSerializer
     permission_classes = (AllowAny,)
 
-    def post(self, request):
+    def create(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -141,6 +141,12 @@ class NoteViewSet(viewsets.ModelViewSet, AddCustomResponce):
             serializer.Meta.fields.append('text_' + str(language))
         return serializer
 
+    def create(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return self.custom_response(True, status.HTTP_201_CREATED, 'Note created successfully')
+
     def list(self, request):
         """ 
             Отображение множества записей 
@@ -155,7 +161,6 @@ class NoteViewSet(viewsets.ModelViewSet, AddCustomResponce):
             organization_id = []
             for member in organization_members:
                 organization_id.append(member.id)
-            print(F'organization_id - {organization_id}')
             notes = Note.objects.filter(autor__in=organization_id)
             if not notes:
                 return self.custom_response(True, status.HTTP_204_NO_CONTENT, 'No notes created')
@@ -249,6 +254,17 @@ class UserViewSet(viewsets.ModelViewSet, AddCustomResponce):
 
         return self.custom_response(False, status.HTTP_400_BAD_REQUEST, 'The users change was unsuccessful', error=str(serializer.errors))
 
+    def create(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = User.objects.filter(phone_number=serializer.data.get("phone_number"))[0]
+        if request.data["organization"]:
+            organization = Organization.objects.filter(id=int(request.data["organization"]))[0]
+            user.organization = organization
+            user.save()
+        return self.custom_response(True, status.HTTP_201_CREATED, 'User registered successfully')
+
     def perform_create(self, serializer):
         return super(UserViewSet, self).perform_create(serializer)
 
@@ -258,6 +274,12 @@ class OrganizationViewSet(viewsets.ModelViewSet, AddCustomResponce):
     authentication_classes = [JSONWebTokenAuthentication]
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+    def create(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return self.custom_response(True, status.HTTP_201_CREATED, 'Organization created successfully')
+
     def list(self, request):
         """ Отображение множества записей """
         try:
