@@ -56,7 +56,7 @@ __localhost:8000/user/__
 
 __localhost:8000/user/<id пользователя>/__
 Позволяет просматривать и редактировать все поля выбраного пользователя.
-При создании пользователя принимает поля "name", "phone_number", "password", "level" и "organization". Поле "level" принимает значения "User", "Manager", "Admin".
+При редактировании пользователя принимает поля "name", "phone_number", "password", "level" и "organization". Поле "level" принимает значения "User", "Manager", "Admin".
 Поддерживает методы: GET, PUT.
 
 __localhost:8000/organization/__
