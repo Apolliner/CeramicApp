@@ -1,11 +1,12 @@
-version: "3.9"
-   
-services:
-  ceramic_app:
+version: "2"
+
+services: 
+  ceramic-apache2:
     build: .
-    command: python manage.py migrate
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/code
+    container_name: ceramic-apache2
     ports:
-      - "8000:8000"
+      - '8000:8000'
+      - '3500:3500'
+      - '8006:81'
+    volumes: 
+      - $PWD/www:/var/www/html
