@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'CeramicApp.apps.CeramicappConfig',
     'modeltranslation',
     'rest_framework.authtoken',
+    'mod_wsgi.server',
 ]
 
 MIDDLEWARE = [

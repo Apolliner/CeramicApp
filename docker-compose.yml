@@ -1,12 +1,12 @@
-version: "2"
+version: "3.3"
 
-services: 
-  ceramic-apache2:
+services:
+  ceramic_app:
     build: .
-    container_name: ceramic-apache2
+    command: python manage.py migrate
+    command: python manage.py runmodwsgi
+    volumes:
+      - .:/code
     ports:
-      - '8000:8000'
-      - '3500:3500'
-      - '8006:81'
-    volumes: 
-      - $PWD/www:/var/www/html
+      - "8000:8000"
+
